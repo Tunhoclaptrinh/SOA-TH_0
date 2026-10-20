@@ -1,0 +1,48 @@
+{
+  "name": "ptit-soa-tuition-lab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lab 3 PTIT: kết nối và duy trì kết nối giữa Fee Service và ngân hàng",
+  "type": "module",
+  "packageManager": "pnpm@10.33.4",
+  "engines": {
+    "node": ">=18.20.0",
+    "pnpm": ">=10"
+  },
+  "scripts": {
+    "dev": "tsx scripts/start.ts",
+    "dev:bank": "tsx watch src/bank/server.ts",
+    "dev:fee": "tsx watch src/fee/server.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/scripts/start.js",
+    "start:bank": "node dist/src/bank/server.js",
+    "start:fee": "node dist/src/fee/server.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "pnpm typecheck && pnpm lint && pnpm format:check",
+    "test": "tsx --test --test-concurrency=1 test/*.test.ts",
+    "bench": "tsx scripts/benchmark.ts",
+    "lab": "tsx scripts/lab-report.ts"
+  },
+  "dependencies": {
+    "dotenv": "16.6.1",
+    "express": "5.3.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.1",
+    "@types/express": "5.0.3",
+    "@types/node": "18.19.130",
+    "eslint": "9.39.1",
+    "prettier": "3.6.2",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.46.1"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "info": {
+    "name": "PTIT SOA · Lab 3 · Thanh toán học phí",
+    "description": "Chạy Fee :4001 và Bank :4002. Đổi biến môi trường rồi restart Bank để thử DELAY_MS, FAIL_RATE, DROP_RATE. Không gửi charge trực tiếp khi đang so công nợ với thống kê ngân hàng.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "feeUrl", "value": "http://localhost:4001" },
+    { "key": "bankUrl", "value": "http://localhost:4002" },
+    { "key": "studentId", "value": "1" },
+    { "key": "paymentId", "value": "P1" }
+  ],
+  "item": [
+    {
+      "name": "Fee · Health (độc lập với ngân hàng)",
+      "request": { "method": "GET", "url": "{{feeUrl}}/health" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('Fee còn sống', () => pm.response.to.have.status(200));"]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fee · Xem công nợ",
+      "request": { "method": "GET", "url": "{{feeUrl}}/students/{{studentId}}/fees" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('GET dưới 300ms', () => pm.expect(pm.response.responseTime).below(300));",
+              "pm.test('Công nợ khả dụng hợp lệ', () => { const b = pm.response.json(); pm.expect(b.available).eql(b.outstanding - b.reserved); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fee · Thanh toán 100.000đ (lưu paymentId)",
+      "request": {
+        "method": "POST",
+        "url": "{{feeUrl}}/students/{{studentId}}/payments",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": 100000\n}",
+          "options": { "raw": { "language": "json" } }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const b = pm.response.json();",
+              "if (b.paymentId) pm.collectionVariables.set('paymentId', b.paymentId);",
+              "pm.test('Đúng mã HTTP của lab', () => pm.expect([201, 402, 503, 504]).include(pm.response.code));",
+              "pm.test('Dưới 4,5 giây', () => pm.expect(pm.response.responseTime).at.most(4500));",
+              "pm.test('HTTP khớp trạng thái', () => { pm.expect(b.status).eql(pm.response.code === 201 ? 'PAID' : pm.response.code === 504 ? 'PENDING' : 'FAILED'); });",
+              "if (pm.response.code !== 201) pm.test('Đủ trường lỗi', () => { pm.expect(b).to.have.all.keys('paymentId', 'studentId', 'amount', 'status', 'attempts', 'error'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fee · Xem trạng thái lệnh vừa tạo",
+      "request": { "method": "GET", "url": "{{feeUrl}}/payments/{{paymentId}}" }
+    },
+    {
+      "name": "Fee · Retry PENDING bằng đúng khóa cũ",
+      "request": { "method": "POST", "url": "{{feeUrl}}/payments/{{paymentId}}/retry" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Giữ nguyên paymentId', () => pm.expect(pm.response.json().paymentId).eql(pm.collectionVariables.get('paymentId')));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "TH4c · Thanh toán 25 triệu → 402 (student 1, dữ liệu mới)",
+      "request": {
+        "method": "POST",
+        "url": "{{feeUrl}}/students/1/payments",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": 25000000\n}",
+          "options": { "raw": { "language": "json" } }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Ngân hàng từ chối 402', () => pm.response.to.have.status(402));",
+              "pm.test('FAILED, không retry', () => { const b = pm.response.json(); pm.expect(b.status).eql('FAILED'); pm.expect(b.attempts).eql(1); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bank · Thống kê TCP, request, charge, duplicates",
+      "request": { "method": "GET", "url": "{{bankUrl}}/stats" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Không có giao dịch bị trừ trùng', () => pm.expect(pm.response.json().duplicates).eql(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bank · Health",
+      "request": { "method": "GET", "url": "{{bankUrl}}/health" }
+    },
+    {
+      "name": "Bank · Thử idempotency trực tiếp (gửi 2 lần, charges chỉ tăng 1)",
+      "request": {
+        "description": "Thử riêng, không dùng cùng phép đo so công nợ Fee với charges. Cùng khóa và nội dung trả lại cùng chargeId.",
+        "method": "POST",
+        "url": "{{bankUrl}}/charges",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Idempotency-Key", "value": "postman-demo-key-1" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reference\": \"POSTMAN-DEMO-1\",\n  \"amount\": 1000\n}",
+          "options": { "raw": { "language": "json" } }
+        }
+      }
+    }
+  ]
+}
