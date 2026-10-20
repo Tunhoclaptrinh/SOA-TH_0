@@ -119,6 +119,7 @@ async function measureMode(mode: 'before' | 'after', fee: FeeOptions) {
     return {
       ...summarize(results),
       elapsedMs,
+      connections: after.connections,
       newConnections: after.connections - before.connections,
       charges: after.charges - before.charges,
       duplicates: after.duplicates,
@@ -175,6 +176,7 @@ const checks = {
     a.keepAlive.paid === 200 &&
     a.keepAlive.charges === 200 &&
     a.keepAlive.duplicates === 0 &&
+    a.keepAlive.connections <= 20 &&
     a.keepAlive.newConnections <= 20 &&
     a.keepAlive.idlePaid === 5,
   drop:
@@ -212,13 +214,13 @@ ${report.randomness} Kết quả thực tế dùng Math.random có thể thay đ
 | 1. Ngân hàng tắt | HTTP ${b.outage.code}, ${b.outage.ms} ms | HTTP ${a.outage.code}, ${a.outage.ms} ms; phục hồi HTTP ${a.outage.recoveredCode} | ${checks.outage} |
 | 2. Ngân hàng trễ 5s | HTTP ${b.slow.singleCode}, ${b.slow.singleMs} ms | HTTP ${a.slow.singleCode}/${a.slow.singleStatus}, ${a.slow.singleMs} ms | ${checks.slow} |
 | 2. GET khi 20 lệnh chờ | ${b.slow.getMs} ms | ${a.slow.getMs} ms; ${a.slow.pending}/20 PENDING; max ${a.slow.maxMs} ms | ${checks.slow} |
-| 3. 200 lệnh / 10 đồng thời | ${b.keepAlive.paid}/200 PAID; ${b.keepAlive.newConnections} TCP; ${b.keepAlive.elapsedMs} ms | ${a.keepAlive.paid}/200 PAID; ${a.keepAlive.newConnections} TCP; ${a.keepAlive.elapsedMs} ms | ${checks.keepAlive} |
+| 3. 200 lệnh / 10 đồng thời | ${b.keepAlive.paid}/200 PAID; ${b.keepAlive.newConnections} TCP mới (${b.keepAlive.connections} tổng); ${b.keepAlive.elapsedMs} ms | ${a.keepAlive.paid}/200 PAID; ${a.keepAlive.newConnections} TCP mới (${a.keepAlive.connections} tổng); ${a.keepAlive.elapsedMs} ms | ${checks.keepAlive} |
 | 3. Sau idle 6s | Chỉ đo bản hoàn thiện | ${a.keepAlive.idlePaid}/5 PAID | ${checks.keepAlive} |
 | 4a. DROP_RATE=0.3 | ${b.drop.paid}/60 PAID; ${b.drop.charges} charges; ${b.drop.duplicates} duplicates | ${a.drop.paid}/60 PAID; ${a.drop.charges} charges; ${a.drop.duplicates} duplicates | ${checks.drop} |
 | 4b. FAIL_RATE=0.3 | ${b.fail.paid}/60 PAID; ${b.fail.charges} charges; ${b.fail.duplicates} duplicates | ${a.fail.paid}/60 PAID; ${a.fail.charges} charges; ${a.fail.duplicates} duplicates | ${checks.fail} |
 | 4c. Từ chối 25 triệu | HTTP ${b.declined.code}; ${b.declined.requests} request | HTTP ${a.declined.code}; ${a.declined.requests} request | ${checks.declined} |
 
-Số TCP là chênh lệch connections ở /stats trước/sau batch, dùng lại một kết nối riêng để đọc stats. Requests đếm POST /charges; charges đếm lần trừ tiền thật; replay idempotency không tăng charges hoặc duplicates.
+TCP mới là chênh lệch connections ở /stats trước/sau batch, dùng lại một kết nối riêng để đọc stats. TCP tổng lấy trực tiếp từ /stats sau batch, bao gồm cả kết nối đọc stats; tiêu chí <= 20 được kiểm tra trên cả hai số. Requests đếm POST /charges; charges đếm lần trừ tiền thật; replay idempotency không tăng charges hoặc duplicates.
 
 Dữ liệu JSON chi tiết: [lab-results.json](lab-results.json). Chạy lại bằng pnpm lab; runner dùng cổng ngẫu nhiên và dữ liệu riêng, không đụng các service bạn đang chạy ở 4001/4002.
 `;

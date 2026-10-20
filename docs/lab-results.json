@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-20T03:39:06.187Z",
-  "generatedLocal": "10:39:06 20/10/2026",
+  "generatedAt": "2026-10-20T03:53:20.097Z",
+  "generatedLocal": "10:53:20 20/10/2026",
   "node": "v24.21.0",
   "implementation": "TypeScript strict / pnpm",
   "baseline": "Cùng xử lý HTTP/nghiệp vụ; timeout 15s, một lần gọi, không keep-alive.",
@@ -10,25 +10,25 @@
       "outage": {
         "code": 503,
         "status": "FAILED",
-        "ms": 17.31,
+        "ms": 16.83,
         "getCode": 200,
-        "getMs": 0.92,
+        "getMs": 0.94,
         "recoveredCode": 201
       },
       "slow": {
         "singleCode": 201,
         "singleStatus": "PAID",
-        "singleMs": 5004.71,
+        "singleMs": 5005,
         "total": 20,
         "paid": 20,
         "pending": 0,
         "codes": {
           "201": 20
         },
-        "maxMs": 5028,
-        "batchMs": 5032.11,
+        "maxMs": 5039,
+        "batchMs": 5041.6,
         "getCode": 200,
-        "getMs": 3.21
+        "getMs": 1.76
       },
       "keepAlive": {
         "total": 200,
@@ -37,8 +37,9 @@
         "codes": {
           "201": 200
         },
-        "maxMs": 16,
-        "elapsedMs": 142.65,
+        "maxMs": 17,
+        "elapsedMs": 144.84,
+        "connections": 201,
         "newConnections": 200,
         "charges": 200,
         "duplicates": 0,
@@ -53,7 +54,7 @@
           "504": 17
         },
         "maxMs": 1,
-        "elapsedMs": 41.67,
+        "elapsedMs": 38.97,
         "requests": 60,
         "charges": 60,
         "duplicates": 0,
@@ -69,7 +70,7 @@
           "503": 17
         },
         "maxMs": 1,
-        "elapsedMs": 38.34,
+        "elapsedMs": 35.82,
         "requests": 60,
         "charges": 43,
         "duplicates": 0,
@@ -87,15 +88,15 @@
       "outage": {
         "code": 503,
         "status": "FAILED",
-        "ms": 0.8,
+        "ms": 0.88,
         "getCode": 200,
-        "getMs": 0.29,
+        "getMs": 0.26,
         "recoveredCode": 201
       },
       "slow": {
         "singleCode": 504,
         "singleStatus": "PENDING",
-        "singleMs": 4000.95,
+        "singleMs": 4001.34,
         "total": 20,
         "paid": 0,
         "pending": 20,
@@ -103,9 +104,9 @@
           "504": 20
         },
         "maxMs": 4009,
-        "batchMs": 4009.88,
+        "batchMs": 4010.97,
         "getCode": 200,
-        "getMs": 1.35
+        "getMs": 2.07
       },
       "keepAlive": {
         "total": 200,
@@ -115,7 +116,8 @@
           "201": 200
         },
         "maxMs": 10,
-        "elapsedMs": 71.75,
+        "elapsedMs": 67.13,
+        "connections": 9,
         "newConnections": 8,
         "charges": 200,
         "duplicates": 0,
@@ -128,8 +130,8 @@
         "codes": {
           "201": 60
         },
-        "maxMs": 107,
-        "elapsedMs": 1811.49,
+        "maxMs": 106,
+        "elapsedMs": 1790.42,
         "requests": 77,
         "charges": 60,
         "duplicates": 0,
@@ -143,8 +145,8 @@
         "codes": {
           "201": 60
         },
-        "maxMs": 306,
-        "elapsedMs": 2597.03,
+        "maxMs": 305,
+        "elapsedMs": 2588.88,
         "requests": 80,
         "charges": 60,
         "duplicates": 0,

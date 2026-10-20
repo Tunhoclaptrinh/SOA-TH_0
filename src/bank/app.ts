@@ -15,10 +15,10 @@ export function createBank(options: BankOptions = {}) {
   const service = new ChargeService(store, config, shutdown.signal, options.random);
   const app = express();
   app.disable('x-powered-by');
-  app.use((req, _res, next) => {
-    if (req.method === 'POST' && req.path === '/charges') {
-      store.recordRequest();
-    }
+  // Dùng cùng cơ chế khớp route của Express, kể cả /charges/ và /CHARGES.
+  // Đếm trước JSON parser để request có body lỗi cũng được ghi nhận.
+  app.post('/charges', (_req, _res, next) => {
+    store.recordRequest();
     next();
   });
   app.use(express.json({ limit: '16kb' }));

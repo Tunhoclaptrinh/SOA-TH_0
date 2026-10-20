@@ -144,6 +144,7 @@ void test('TH3: 200 thanh toán / 10 đồng thời dùng <=20 TCP, tiếp tục
   const after = (await f.bankRequest<BankStats>('/stats')).body;
   assert.ok(results.every((r) => r.code === 201));
   assert.ok(after.connections - before.connections <= 20);
+  assert.ok(after.connections <= 20, 'Tổng TCP, kể cả kết nối đọc stats, phải <= 20.');
   assert.equal(after.charges, 200);
   assert.equal(after.duplicates, 0);
   await sleep(6000);
@@ -319,4 +320,21 @@ void test('thống kê duplicates phát hiện client dùng sai khóa cho cùng 
   }
   assert.equal(f.bank.stats.charges, 2);
   assert.equal(f.bank.stats.duplicates, 1);
+});
+
+void test('stats phải đếm đúng mọi POST charges mà Express chấp nhận, kể cả JSON lỗi', async (t) => {
+  const f = await setup(t);
+  for (const [index, path] of ['/charges', '/charges/', '/CHARGES'].entries()) {
+    const result = await f.bankRequest(path, {
+      method: 'POST',
+      headers: { 'Idempotency-Key': `stats-key-${index}` },
+      body: { reference: `STATS-${index}`, amount: 1000 },
+    });
+    assert.equal(result.code, 201);
+  }
+  const malformed = await f.bankRequest('/CHARGES', { method: 'POST', rawBody: '{' });
+  assert.equal(malformed.code, 400);
+  assert.equal(f.bank.stats.requests, 4);
+  assert.equal(f.bank.stats.charges, 3);
+  assert.equal(f.bank.stats.duplicates, 0);
 });

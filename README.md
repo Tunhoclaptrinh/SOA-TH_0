@@ -216,6 +216,8 @@ Test và runner dùng cổng ngẫu nhiên, dữ liệu độc lập, tự dọn
 
 `pnpm lab` ghi [bảng kết quả](docs/lab-results.md) và [JSON chi tiết](docs/lab-results.json). Đối chứng là cùng mã với timeout 15 giây, một lần gọi, không keep-alive; không giả định có mã nguồn cũ. TH1 và lỗi 4xx dùng chung cách xử lý nên có thể đã đạt ngay trong đối chứng. Runner dùng bộ sinh ngẫu nhiên seed 7 để lặp lại kết quả; các service khởi chạy bình thường dùng `Math.random` đúng theo FAIL_RATE/DROP_RATE.
 
+Xem thêm [bảng đối chiếu từng yêu cầu và dàn ý demo](docs/assignment-checklist.md) để chuẩn bị trình bày bài lab.
+
 ## Cấu hình
 
 Các entrypoint tự nạp `.env` bằng dotenv. Biến đã export trong terminal được ưu tiên hơn giá trị trong `.env`. Tạo file cấu hình bằng:
